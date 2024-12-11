@@ -11,8 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG BASEIMAGE=gcr.io/distroless/static:nonroot-amd64
-FROM $BASEIMAGE
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Here we rely on Docker buildx to set GOOS and GOARCH for us 
+# based on TARGETOS and TARGETARCH. You can also explicitly set them.
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /cluster-autoscaler-amd64 .
+FROM gcr.io/distroless/static:nonroot-amd64
 
 COPY cluster-autoscaler-amd64 /cluster-autoscaler
 WORKDIR /

@@ -116,8 +116,9 @@ func (aws *awsCloudProvider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.N
 		return nil, nil
 	}
 	ref, err := AwsRefFromProviderId(node.Spec.ProviderID)
-	if err != nil {
-		return nil, err
+	if err != nil || ref == nil {
+		klog.Warningf("Ignoring node %v with invalid provider ID: %v", node.Name, node.Spec.ProviderID)
+		return nil, nil
 	}
 	asg := aws.awsManager.GetAsgForInstance(*ref)
 
@@ -150,8 +151,9 @@ func (aws *awsCloudProvider) HasInstance(node *apiv1.Node) (bool, error) {
 	}
 
 	awsRef, err := AwsRefFromProviderId(node.Spec.ProviderID)
-	if err != nil {
-		return false, err
+	if err != nil || awsRef == nil {
+		klog.Warningf("Ignoring node %v with invalid provider ID: %v", node.Name, node.Spec.ProviderID)
+		return false, nil
 	}
 
 	// we don't care about the status
@@ -208,7 +210,8 @@ var validAwsRefIdRegex = regexp.MustCompile(fmt.Sprintf(`^aws\:\/\/\/[-0-9a-z]*\
 // must be in format: aws:///zone/name
 func AwsRefFromProviderId(id string) (*AwsInstanceRef, error) {
 	if validAwsRefIdRegex.FindStringSubmatch(id) == nil {
-		return nil, fmt.Errorf("wrong id: expected format aws:///<zone>/<name>, got %v", id)
+		klog.Warningf("Ignoring node with malformed provider ID: %v", id)
+		return nil, nil
 	}
 	splitted := strings.Split(id[7:], "/")
 	return &AwsInstanceRef{
