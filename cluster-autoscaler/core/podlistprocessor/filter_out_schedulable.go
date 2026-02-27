@@ -84,6 +84,11 @@ func (p *filterOutSchedulablePodListProcessor) Process(autoscalingCtx *ca_contex
 	} else {
 		klog.V(4).Info("No schedulable pods")
 	}
+
+	for _, pod := range unschedulablePodsToHelp {
+		klog.V(1).Infof("Pod %s/%s is unschedulable. Reasons: %v", pod.Namespace, pod.Name, pod.Status.Conditions)
+	}
+
 	return unschedulablePodsToHelp, nil
 }
 
