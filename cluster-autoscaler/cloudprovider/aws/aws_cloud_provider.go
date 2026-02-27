@@ -154,7 +154,8 @@ func (aws *awsCloudProvider) HasInstance(node *apiv1.Node) (bool, error) {
 
 	awsRef, err := AwsRefFromProviderId(node.Spec.ProviderID)
 	if err != nil {
-		return false, err
+		klog.V(6).Infof("Node %v has unrecognized providerId: %v", node.Name, node.Spec.ProviderID)
+		return false, nil
 	}
 
 	// we don't care about the status

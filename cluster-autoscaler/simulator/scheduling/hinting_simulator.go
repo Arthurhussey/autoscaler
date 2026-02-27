@@ -52,7 +52,7 @@ func NewHintingSimulator() *HintingSimulator {
 // Note: this function does not fork clusterSnapshot: this has to be done by the caller.
 func (s *HintingSimulator) TrySchedulePods(clusterSnapshot clustersnapshot.ClusterSnapshot, pods []*apiv1.Pod, isNodeAcceptable func(*framework.NodeInfo) bool, breakOnFailure bool) ([]Status, int, error) {
 	similarPods := NewSimilarPodsScheduling()
-
+	klogx.V(4).Infof("Trying to schedule %d pods", len(pods))
 	var statuses []Status
 	loggingQuota := klogx.PodsLoggingQuota()
 	for _, pod := range pods {
@@ -73,6 +73,7 @@ func (s *HintingSimulator) TrySchedulePods(clusterSnapshot clustersnapshot.Clust
 			klogx.V(4).UpTo(loggingQuota).Infof("Pod %s/%s can be moved to %s", pod.Namespace, pod.Name, nodeName)
 			statuses = append(statuses, Status{Pod: pod, NodeName: nodeName})
 		} else if breakOnFailure {
+			klogx.V(4).Infof("Pod %s/%s cannot be scheduled", pod.Namespace, pod.Name)
 			break
 		}
 	}
